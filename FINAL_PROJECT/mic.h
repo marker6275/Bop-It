@@ -3,4 +3,4 @@
 #include "nrf.h"
 #include "stdbool.h"
 
-int microphone(void);
+uint32_t microphone(void);

@@ -127,58 +127,56 @@ int main(void) {
 
       current_temp = current_temp->next;
     }
-    while (1) {
-      printf("Random");
-      char* task = choose();
-      current->task = task;
+    printf("Random");
+    char* task = choose();
+    current->task = task;
 
-      if (task == "button") {
-        bool pressed = false;
+    if (task == "button") {
+      bool pressed = false;
 
-        while (!pressed) {
-          pressed = button_pressed();
-        }
-
-        printf("button done!\n");
-      } else if (task == "flip") {
-        bool flipped = false;
-
-        while (!flipped) {
-          flipped = flip();
-        }
-
-        printf("flip done!\n");
-      } else if (task == "mic") {
-        bool shouted = false;
-
-        while (!shouted) {
-          shouted = shout();
-        }
-
-        shouted = false;
-        printf("shout done!\n");
-      } else if (task == "touch") {
-        touching();
-
-        printf("touch done!\n");
-      } else if (task == "twist") {
-        twisting();
-
-        printf("twist done!\n");
-      } else if (task == "water") {
-        watering();
-
-        printf("water done!\n");
+      while (!pressed) {
+        pressed = button_pressed();
       }
 
-      nrf_delay_ms(500);
-      struct current_order_t* new;
-      new = malloc(sizeof(struct current_order_t));
-      new->task = "new";
-      new->next = NULL;
-      current->next = new;
-      current = current->next;
+      printf("button done!\n");
+    } else if (task == "flip") {
+      bool flipped = false;
+
+      while (!flipped) {
+        flipped = flip();
+      }
+
+      printf("flip done!\n");
+    } else if (task == "mic") {
+      bool shouted = false;
+
+      while (!shouted) {
+        shouted = shout();
+      }
+
+      shouted = false;
+      printf("shout done!\n");
+    } else if (task == "touch") {
+      touching();
+
+      printf("touch done!\n");
+    } else if (task == "twist") {
+      twisting();
+
+      printf("twist done!\n");
+    } else if (task == "water") {
+      watering();
+
+      printf("water done!\n");
     }
+
+    nrf_delay_ms(500);
+    struct current_order_t* new;
+    new = malloc(sizeof(struct current_order_t));
+    new->task = "new";
+    new->next = NULL;
+    current->next = new;
+    current = current->next;
   }
 
   return 1;

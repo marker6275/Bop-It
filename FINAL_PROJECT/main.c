@@ -79,7 +79,7 @@ int main(void) {
   head->next = current;
   int success = 1;
 
-  while(success == 1){
+  while (success == 1) {
     struct current_order_t* current_temp;
     current_temp = head;
     while (current_temp->next->next != NULL){

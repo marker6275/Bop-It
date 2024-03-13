@@ -47,10 +47,10 @@ bool watering() {
   return water() > 1.0;
 }
 
-struct current_order{
+typedef struct current_order_t {
   char* task;
-  struct current_order *next;
-}
+  struct current_order_t *next;
+} current_order_t;
 
 int main(void) {
   printf("Board started!\n");
@@ -65,18 +65,25 @@ int main(void) {
   lsm303agr_init();
   srand(time(NULL));
 
-  current_order current;
-  current_order head;
-  head.task = "head";
-  head.next = current;
+
+  struct current_order_t* current;
+  current = malloc(sizeof(struct current_order_t));
+  struct current_order_t* head;
+  head = malloc(sizeof(struct current_order_t));
+
+  current->task = "new";
+  current->next = NULL;
+
+  head->task = "head";
+  head->next = current;
   int success = 1;
 
   while(success == 1){
-    current_order current_temp;
+    struct current_order_t* current_temp;
     current_temp = head;
-    while (current_temp.next.task != NULL){
+    while (current_temp->next->next != NULL){
       printf("Order");
-      task = current_temp.next.task;
+      char* task = current_temp->next->task;
 
       if (task == "button") {
         bool pressed = false;
@@ -117,12 +124,12 @@ int main(void) {
         printf("water done!\n");
       }
 
-      current_temp = current_temp.next;
+      current_temp = current_temp->next;
     }
     while (1) {
       printf("Random");
       char* task = choose();
-      current.task = task;
+      current->task = task;
 
       if (task == "button") {
         bool pressed = false;
@@ -164,9 +171,12 @@ int main(void) {
       }
 
       nrf_delay_ms(500);
-      current_order next;
-      current.next = next;
-      current = current.next;
+      struct current_order_t* new;
+      new = malloc(sizeof(struct current_order_t));
+      new->task = "new";
+      new->next = NULL;
+      current->next = new;
+      current = current->next;
     }
   }
 

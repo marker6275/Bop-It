@@ -68,10 +68,11 @@ int main(void) {
 
   struct current_order_t* current;
   current = malloc(sizeof(struct current_order_t));
+  
   struct current_order_t* head;
   head = malloc(sizeof(struct current_order_t));
 
-  current->task = "new";
+  current->task = choose();
   current->next = NULL;
 
   head->task = "head";

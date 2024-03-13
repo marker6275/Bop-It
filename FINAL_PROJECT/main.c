@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
 
 #include "nrf.h"
 #include "nrf_delay.h"
@@ -78,12 +79,15 @@ int main(void) {
   head->task = "head";
   head->next = current;
   int success = 1;
+  float count = 5.0f;
 
   while(success == 1){
     struct current_order_t* current_temp;
     current_temp = head;
+    time_t seconds;
     while (current_temp->next->next != NULL){
       printf("Order");
+      seconds = time(NULL);
       char* task = current_temp->next->task;
 
       if (task == "button") {
@@ -125,10 +129,19 @@ int main(void) {
         printf("water done!\n");
       }
 
+      uint32_t time_passed = time(NULL) - seconds;
+
+      if(time_passed > count){
+        success = 0;
+        printf("You Lost/n");
+        return -1;
+      }
+
       current_temp = current_temp->next;
     }
     printf("Random");
     char* task = choose();
+    seconds = time(NULL);
     current->task = task;
 
     if (task == "button") {
@@ -169,6 +182,14 @@ int main(void) {
 
       printf("water done!\n");
     }
+  
+    uint32_t time_passed = time(NULL) - seconds;
+
+    if(time_passed > count){
+      success = 0;
+      printf("You Lost/n");
+      return -1;
+    }
 
     nrf_delay_ms(500);
     struct current_order_t* new;
@@ -177,6 +198,7 @@ int main(void) {
     new->next = NULL;
     current->next = new;
     current = current->next;
+    count = count * 0.95f;
   }
 
   return 1;

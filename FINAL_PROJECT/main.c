@@ -19,15 +19,34 @@
 #include "touch.h"
 #include "twist.h"
 #include "water.h"
-#include "mic.h"
+#include "light.h"
 #include "utils.h"
+#include "nrfx_timer.h"
+
+nrfx_timer_t timer1 = NRFX_TIMER_INSTANCE(0);
+
+void timer_interrupt(nrf_timer_event_t event_type, void *p_context) {
+  printf("YOU LOSE!\n");
+}
+
+void timer_init(void) {
+  nrfx_timer_config_t timer_config = NRFX_TIMER_DEFAULT_CONFIG;
+  timer_config.frequency = NRF_TIMER_FREQ_1MHz;
+  timer_config.bit_width = NRF_TIMER_BIT_WIDTH_32;
+  nrfx_timer_init(&timer1, &timer_config, timer_interrupt);
+  nrfx_timer_enable(&timer1);
+}
+
+int timer_done(float limit) {
+  return nrfx_timer_capture(&timer1, NRF_TIMER_CC_CHANNEL0) > limit;
+}
 
 bool button_pressed() {
   return (!gpio_read(14)) || (!gpio_read(23));
 }
 
-bool shout() {
-  return microphone() > 15000;
+bool lighting() {
+  return light();
 }
 
 bool flip() {
@@ -48,24 +67,14 @@ bool watering() {
   return water() > 1.0;
 }
 
-typedef struct current_order_t {
-  char* task;
-  struct current_order_t *next;
-} current_order_t;
+bool temp() {
+  return temperature() > 3;
+}
 
 int main(void) {
-  printf("Board started!\n");
-  *(uint32_t*)(0x50000514) = 1 << 20;
-  *(uint32_t*)(0x50000504) = 1 << 20;
-
-  gpio_config(14, GPIO_INPUT);
-  gpio_config(23, GPIO_INPUT);
-  gpio_config(20, GPIO_OUTPUT);
-  gpio_clear(20);
-
-  lsm303agr_init();
-  srand(time(NULL));
-
+  game_init();
+  timer_init();
+  opening_sequence();
 
   struct current_order_t* current;
   current = malloc(sizeof(struct current_order_t));
@@ -78,18 +87,19 @@ int main(void) {
 
   head->task = "head";
   head->next = current;
-  int success = 1;
-  float count = 5.0f;
 
-  while(success == 1){
+  float limit = 6000000;
+  int level = 1;
+  
+  while(1){
     struct current_order_t* current_temp;
     current_temp = head;
-    time_t seconds;
     while (current_temp->next->next != NULL){
-      printf("Order");
-      seconds = time(NULL);
-      char* task = current_temp->next->task;
+      nrfx_timer_clear(&timer1);
 
+      char* task = current_temp->next->task;
+      print_do_sequence();
+      int count = 0;
       if (task == "button") {
         bool pressed = false;
 
@@ -97,52 +107,47 @@ int main(void) {
           pressed = button_pressed();
         }
 
-        printf("button done!\n");
+        print_good();
       } else if (task == "flip") {
+        
         bool flipped = false;
 
         while (!flipped) {
           flipped = flip();
         }
 
-        printf("flip done!\n");
-      } else if (task == "mic") {
-        bool shouted = false;
+        print_good();
+      } else if (task == "light") {
+        lighting();
 
-        while (!shouted) {
-          shouted = shout();
-        }
-
-        shouted = false;
-        printf("shout done!\n");
+        print_good();
       } else if (task == "touch") {
         touching();
 
-        printf("touch done!\n");
+        print_good();
       } else if (task == "twist") {
         twisting();
 
-        printf("twist done!\n");
+        print_good();
       } else if (task == "water") {
         watering();
 
-        printf("water done!\n");
+        print_good();
       }
 
-      uint32_t time_passed = time(NULL) - seconds;
-
-      if(time_passed > count){
-        success = 0;
-        printf("You Lost/n");
-        return -1;
-      }
-
+        if (timer_done(limit)) {
+          print_lose(level);
+          return -1;
+        }
+      
       current_temp = current_temp->next;
+      nrf_delay_ms(500);
     }
-    printf("Random");
+
+    // get new task to add
     char* task = choose();
-    seconds = time(NULL);
     current->task = task;
+    print_new_task(task, level);
 
     if (task == "button") {
       bool pressed = false;
@@ -151,7 +156,7 @@ int main(void) {
         pressed = button_pressed();
       }
 
-      printf("button done!\n");
+      print_done("button");
     } else if (task == "flip") {
       bool flipped = false;
 
@@ -159,36 +164,23 @@ int main(void) {
         flipped = flip();
       }
 
-      printf("flip done!\n");
-    } else if (task == "mic") {
-      bool shouted = false;
+      print_done("flip");
+    } else if (task == "light") {
+      lighting();
 
-      while (!shouted) {
-        shouted = shout();
-      }
-
-      shouted = false;
-      printf("shout done!\n");
+      print_done("light");
     } else if (task == "touch") {
       touching();
 
-      printf("touch done!\n");
+      print_done("touch");
     } else if (task == "twist") {
       twisting();
 
-      printf("twist done!\n");
+      print_done("twist");
     } else if (task == "water") {
       watering();
 
-      printf("water done!\n");
-    }
-  
-    uint32_t time_passed = time(NULL) - seconds;
-
-    if(time_passed > count){
-      success = 0;
-      printf("You Lost/n");
-      return -1;
+      print_done("water");
     }
 
     nrf_delay_ms(500);
@@ -198,7 +190,9 @@ int main(void) {
     new->next = NULL;
     current->next = new;
     current = current->next;
-    count = count * 0.95f;
+    
+    limit *= 0.95;
+    level += 1;
   }
 
   return 1;

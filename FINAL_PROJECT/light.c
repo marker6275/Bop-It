@@ -13,13 +13,12 @@
 
 #include "microbit_v2.h"
 
-#define ANALOG_WATER_IN NRF_SAADC_INPUT_AIN4
+#define ANALOG_LIGHT_IN NRF_SAADC_INPUT_AIN0
 
-#define ADC_WATER_CHANNEL 4
+#define ADC_LIGHT_CHANNEL 1
 
 static void adc_init(void);
 static float adc_sample_blocking(uint8_t channel);
-
 
 static void saadc_event_callback(nrfx_saadc_evt_t const* _unused) {
   // don't care about saadc events
@@ -27,7 +26,6 @@ static void saadc_event_callback(nrfx_saadc_evt_t const* _unused) {
 }
 
 static void adc_init(void) {
-  // Initialize the SAADC
   nrfx_saadc_config_t saadc_config = {
     .resolution = NRF_SAADC_RESOLUTION_12BIT,
     .oversample = NRF_SAADC_OVERSAMPLE_DISABLED,
@@ -36,8 +34,8 @@ static void adc_init(void) {
   };
   ret_code_t error_code = nrfx_saadc_init(&saadc_config, saadc_event_callback);
 
-  nrf_saadc_channel_config_t light_channel_config = NRFX_SAADC_DEFAULT_CHANNEL_CONFIG_SE(ANALOG_WATER_IN);
-  error_code = nrfx_saadc_channel_init(ADC_WATER_CHANNEL, &light_channel_config);
+  nrf_saadc_channel_config_t light_channel_config = NRFX_SAADC_DEFAULT_CHANNEL_CONFIG_SE(ANALOG_LIGHT_IN);
+  error_code = nrfx_saadc_channel_init(ADC_LIGHT_CHANNEL, &light_channel_config);
 }
 
 static float adc_sample_blocking(uint8_t channel) {
@@ -49,15 +47,16 @@ static float adc_sample_blocking(uint8_t channel) {
   return voltage;
 }
 
-float water(void) {  
+float light(void) {  
   adc_init();
 
-  bool touched = false;
+  float start = adc_sample_blocking(1);
+  bool lit = fabsf(start - adc_sample_blocking(1)) > 0.5;
 
-  while (!touched) {
-    touched = adc_sample_blocking(4) > 1;
+  while (!lit) {
+    lit = fabsf(start - adc_sample_blocking(1)) > 0.5;
   }
 
-  return adc_sample_blocking(4);
+  return adc_sample_blocking(1);
 }
 

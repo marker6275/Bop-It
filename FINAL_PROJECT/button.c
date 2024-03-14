@@ -25,13 +25,7 @@ typedef struct{
 volatile gpio_reg_t* gpio_pins = (gpio_reg_t*)(0x50000000);
 volatile gpio_reg_t* gpio_pins_2 = (gpio_reg_t*)(0x50000300);
 
-// Inputs: 
-//  gpio_num - gpio number 0-31 OR (32 + gpio number)
-//  dir - gpio direction (INPUT, OUTPUT)
 void gpio_config(uint8_t gpio_num, gpio_direction_t dir) {
-  // Implement me
-  // This function should configure the pin as an input/output
-  // Hint: Use proper PIN_CNF instead of DIR
   uint32_t port = gpio_num >> 5;
   uint32_t pin = gpio_num & 0X1F;
 
@@ -50,12 +44,7 @@ void gpio_config(uint8_t gpio_num, gpio_direction_t dir) {
   }
 }
 
-// Inputs: 
-//  gpio_num - gpio number 0-31 OR (32 + gpio number)
 void gpio_clear(uint8_t gpio_num) {
-  // Implement me
-  // This function should make the pin low
-  // It can assume that the pin has already been configured
   uint32_t port = gpio_num >> 5;
   uint32_t pin = gpio_num & 0x1F;
 
@@ -68,14 +57,7 @@ void gpio_clear(uint8_t gpio_num) {
   }
 }
 
-// Inputs: 
-//  gpio_num - gpio number 0-31 OR (32 + gpio number)
-// Output:
-//  bool - pin state (true == high)
 bool gpio_read(uint8_t gpio_num) {
-  // Implement me
-  // This function should read the value from the pin
-  // It can assume that the pin has already been configured
   int32_t port = gpio_num >> 5;
   uint32_t pin = gpio_num & 0x1F;
 

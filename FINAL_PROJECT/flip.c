@@ -1,8 +1,3 @@
-// LSM303AGR driver for Microbit_v2
-//
-// Initializes sensor and communicates over I2C
-// Capable of reading temperature, acceleration, and magnetic field strength
-
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -13,7 +8,6 @@
 #include "nrf_twi_mngr.h"
 #include "microbit_v2.h"
 
-// Pointer to an initialized I2C instance to use for transactions
 static const nrf_twi_mngr_t* i2c_manager = NULL;
 NRF_TWI_MNGR_DEF(twi_mngr_instance, 1, 0);
 
@@ -68,18 +62,11 @@ void lsm303agr_init(void) {
 
   i2c_manager = &twi_mngr_instance;
 
-  // ---Initialize Accelerometer---
-
-  // Reboot acclerometer
   i2c_reg_write(LSM303AGR_ACC_ADDRESS, CTRL_REG5_A, 0x80);
-  nrf_delay_ms(100); // needs delay to wait for reboot
+  nrf_delay_ms(100);
 
-  // Enable Block Data Update
-  // Only updates sensor data when both halves of the data has been read
   i2c_reg_write(LSM303AGR_ACC_ADDRESS, CTRL_REG4_A, 0x80);
 
-  // Configure accelerometer at 100Hz, normal mode (10-bit)
-  // Enable x, y and z axes
   i2c_reg_write(LSM303AGR_ACC_ADDRESS, CTRL_REG1_A, 0x57);
 }
 
